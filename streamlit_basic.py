@@ -27,7 +27,6 @@ if uploaded_file is not None:
         ]
     )
 
-    # 可視化の実行
     if chart_type == "折れ線グラフ (時系列)":
         date_col = st.selectbox("日付列を選択", df.columns)
         value_cols = st.multiselect("表示する値の列を選択", df.columns)
@@ -40,34 +39,39 @@ if uploaded_file is not None:
         cat_col = st.selectbox("カテゴリ列を選択", df.columns)
         num_col = st.selectbox("数値列を選択", df.select_dtypes(include=["number"]).columns)
         if cat_col and num_col:
-            agg = df.groupby(cat_col)[num_col].sum()
-            st.bar_chart(agg)
+            agg = df.groupby(cat_col)[num_col].sum().reset_index()
+            fig = px.bar(agg, x=cat_col, y=num_col, labels={cat_col: "カテゴリ", num_col: "合計"})
+            st.plotly_chart(fig, use_container_width=True)
 
     elif chart_type == "散布図 (2変数の関係)":
-        x_col, y_col = st.selectbox("X軸", df.columns), st.selectbox("Y軸", df.columns)
+        x_col = st.selectbox("X軸を選択", df.select_dtypes(include=["number"]).columns, key="x")
+        y_col = st.selectbox("Y軸を選択", df.select_dtypes(include=["number"]).columns, key="y")
         if x_col and y_col:
-            chart = alt.Chart(df).mark_circle().encode(
+            chart = alt.Chart(df).mark_circle(size=60).encode(
                 x=x_col, y=y_col, tooltip=list(df.columns)
             ).interactive()
             st.altair_chart(chart, use_container_width=True)
 
     elif chart_type == "ヒストグラム (分布)":
-        num_col = st.selectbox("数値列を選択", df.select_dtypes(include=["number"]).columns)
-        bins = st.slider("ビン数", min_value=5, max_value=50, value=20)
+        num_col = st.selectbox("数値列を選択", df.select_dtypes(include=["number"]).columns, key="hist")
+        bins = st.slider("ビン数", min_value=5, max_value=100, value=20, key="bins")
         if num_col:
-            hist = pd.cut(df[num_col], bins=bins)
-            freq = hist.value_counts().sort_index()
-            st.bar_chart(freq)
+            fig = px.histogram(df, x=num_col, nbins=bins, labels={num_col: "値", "count": "頻度"})
+            st.plotly_chart(fig, use_container_width=True)
 
     elif chart_type == "相関行列ヒートマップ":
         corr = df.corr()
         fig = px.imshow(
             corr,
-            text_auto=True,
+            text_auto=".2f",
             aspect="auto",
-            labels=dict(x="変数", y="変数", color="相関係数")
+            labels=dict(x="変数", y="変数", color="相関係数"),
+            color_continuous_scale="RdBu_r",  # diverging scale
+            zmin=-1, zmax=1
         )
+        fig.update_xaxes(side="top")
         st.plotly_chart(fig, use_container_width=True)
 
 else:
     st.info("左側のアップローダーから CSV ファイルを選択してください。")
+
