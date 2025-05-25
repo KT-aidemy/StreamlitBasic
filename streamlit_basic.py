@@ -61,24 +61,24 @@ if uploaded_file is not None:
 
     elif chart_type == "相関行列ヒートマップ":
     # 数値型の列だけを抽出
-    numeric_df = df.select_dtypes(include=["number"])
-    if numeric_df.shape[1] < 2:
-        st.warning("相関を計算できる数値列が2列以上必要です。")
-    else:
-        # 相関行列計算
-        corr = numeric_df.corr()
-        # ヒートマップ描画
-        fig = px.imshow(
-            corr,
-            text_auto=".2f",
-            aspect="auto",
-            labels=dict(x="変数", y="変数", color="相関係数"),
-            color_continuous_scale="RdBu_r",
-            zmin=-1, zmax=1
+        numeric_df = df.select_dtypes(include=["number"])
+        if numeric_df.shape[1] < 2:
+            st.warning("相関を計算できる数値列が2列以上必要です。")
+        else:
+            # 相関行列計算
+            corr = numeric_df.corr()
+            # ヒートマップ描画
+            fig = px.imshow(
+                corr,
+                text_auto=".2f",
+                aspect="auto",
+                labels=dict(x="変数", y="変数", color="相関係数"),
+                color_continuous_scale="RdBu_r",
+                zmin=-1, zmax=1
         )
-        fig.update_xaxes(side="top")
-        st.plotly_chart(fig, use_container_width=True)
+            fig.update_xaxes(side="top")
+            st.plotly_chart(fig, use_container_width=True)
 
-else:
-    st.info("左側のアップローダーから CSV ファイルを選択してください。")
+    else:
+        st.info("左側のアップローダーから CSV ファイルを選択してください。")
 
